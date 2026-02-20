@@ -9,17 +9,22 @@
 
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 #intialize db
 db = pd.read_csv(os.path.join(os.getcwd(), "DB1.csv"))
 
-#gerneate and return table1 (Descriptive stats for continous/discrete variables)
+#generate and return table1 (Descriptive stats for continous/discrete variables)
 def gen_table1(db: pd.DataFrame) -> pd.DataFrame:
+
+    #get only data we want from collumns we want
     collumns = ['nchild', 'wkswork', 'age', 'income']
     subset = db[collumns]
     table1 = subset.describe()
     drops = ['25%', '50%', '75%']
     table1 = table1.drop(drops)
+
+    #rename collumns and do intial formatings
     names = {'count': 'N',
              'mean': 'Mean',
              'std': 'Std Dev',
@@ -28,6 +33,14 @@ def gen_table1(db: pd.DataFrame) -> pd.DataFrame:
     table1 = table1.rename(index=names)
     table1 = table1.round(2)
     table1 = table1.T
+
+    #Format rows/cols
+    table1 = table1.astype(object)
+    cols = ['Mean', 'Std Dev', 'Min', 'Max']
+    table1.loc['income', cols] = table1.loc['income', cols].map(lambda x: f"${x:,.2f}")
+    rows = ['nchild', 'wkswork', 'age']
+    table1.loc[rows, cols] = table1.loc[rows, cols].map(lambda x: f"{x:,.2f}")
+    table1['N'] = table1['N'].map(lambda x: f"{x:,.0f}")
     return table1
 
 #generate table1 and export to excel
@@ -85,7 +98,10 @@ def gen_table2(db: pd.DataFrame) -> pd.DataFrame:
             })
             all_vars.append(temp_db)
 
-    table2 = pd.concat(all_vars)               
+    table2 = pd.concat(all_vars)         
+
+    table2['Frequency'] = table2['Frequency'].map(lambda x: f"{x:,}")
+    table2['Percent'] = table2['Percent'].map(lambda x: f"{x:.2f}%")      
     return table2
 
 def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
@@ -116,7 +132,7 @@ def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
     }).sort_values('Frequency', ascending=False)
 
     states.index = states.index.map(names)
-    
+
     #get top and bottom 5
     top5 = states.head(5)
     bottom5 = states.tail(5)
@@ -124,6 +140,8 @@ def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
     #create final state table
     state_table = pd.concat([top5, bottom5], keys=['Top 5 States', 'Bottom 5 States'])
     state_table.index.names = [None, None]
+    state_table['Frequency'] = state_table['Frequency'].map(lambda x: f"{x:,}")
+    state_table['Percent'] = state_table['Percent'].map(lambda x: f"{x:.2f}%")
     return state_table
 
 print(gen_table2(db))
