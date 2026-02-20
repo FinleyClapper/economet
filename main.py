@@ -115,15 +115,15 @@ def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
         'Percent': state_percents
     }).sort_values('Frequency', ascending=False)
 
+    states.index = states.index.map(names)
+    
     #get top and bottom 5
     top5 = states.head(5)
     bottom5 = states.tail(5)
     
     #create final state table
     state_table = pd.concat([top5, bottom5], keys=['Top 5 States', 'Bottom 5 States'])
-    state_table = state_table.reset_index()
-    state_table['statefips'] = state_table['statefips'].map(names)
-    state_table.columns = ['Group', 'State', 'Frequency', 'Percent']
+    state_table.index.names = [None, None]
     return state_table
 
 print(gen_table2(db))
