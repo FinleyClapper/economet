@@ -144,5 +144,32 @@ def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
     state_table['Percent'] = state_table['Percent'].map(lambda x: f"{x:.2f}%")
     return state_table
 
+def gen_income_chart(db: pd.DataFrame):
+    #sort by education and get mean for each group
+    avg_by_ed = db.groupby('ed')['income'].mean().sort_index()
+    
+    #setup chart
+    plt.figure(figsize=(10, 6))
+    x_ticks = range(len(avg_by_ed))
+    
+    #create the bars
+    plt.bar(x_ticks, avg_by_ed.values, width=0.5, color='gray', edgecolor='black')
+    
+    #Add labels
+    plt.xlabel("Education Level", fontsize=12, fontweight='bold')
+    plt.ylabel("Average Income ($)", fontsize=12, fontweight='bold')
+    plt.title('Figure 1. Average Income by Educational Attainment', fontsize=14, fontweight='bold')
+    plt.xticks(x_ticks, avg_by_ed.index, rotation=15)
+    for i, value in enumerate(avg_by_ed):
+        plt.text(i, value, f'${value:,.0f}', ha='center', va='bottom', fontweight='bold')
+
+    #saves the chart
+    plt.tight_layout()
+    plt.savefig("Income_by_Education_Chart.jpg", dpi=300)
+    plt.show()
+
+# Run the function
+gen_income_chart(db)
+
 print(gen_table2(db))
 print(gen_state_table(db))
