@@ -10,6 +10,8 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import ttest_ind
+from tabulate import tabulate
 
 #intialize db
 db = pd.read_csv(os.path.join(os.getcwd(), "DB1.csv"))
@@ -45,14 +47,13 @@ def gen_table1(db: pd.DataFrame) -> pd.DataFrame:
 
 #generate table1 and export to excel
 table1 = gen_table1(db)
-print(table1)
-#table1.to_excel("Table1.xlsx")
+table1.to_excel("Table1.xlsx")
 
 #gerneate and return table2 (Descriptive stats for categorical variables)
 def gen_table2(db: pd.DataFrame) -> pd.DataFrame:
     #Setup labels for all the rows
     labels = {
-    'gender': {
+    'male': {
         0: 'Female', 
         1: 'Male'
     },
@@ -104,6 +105,10 @@ def gen_table2(db: pd.DataFrame) -> pd.DataFrame:
     table2['Percent'] = table2['Percent'].map(lambda x: f"{x:.2f}%")      
     return table2
 
+#generate table1 and export to excel
+table2 = gen_table2(db)
+table2.to_excel("Table2.xlsx")
+
 def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
 
     #dict to translate codes to state names
@@ -144,9 +149,13 @@ def gen_state_table(db: pd.DataFrame) -> pd.DataFrame:
     state_table['Percent'] = state_table['Percent'].map(lambda x: f"{x:.2f}%")
     return state_table
 
+#generate table1 and export to excel
+states = gen_state_table(db)
+states.to_excel("States.xlsx")
+
 def gen_income_chart(db: pd.DataFrame):
     #sort by education and get mean for each group
-    avg_by_ed = db.groupby('ed')['income'].mean().sort_index()
+    avg_by_ed = db.groupby('ed')['income'].mean().sort_values(ascending=True)
     
     #setup chart
     plt.figure(figsize=(10, 6))
@@ -167,9 +176,50 @@ def gen_income_chart(db: pd.DataFrame):
     plt.tight_layout()
     plt.savefig("Income_by_Education_Chart.jpg", dpi=300)
     plt.show()
-
-# Run the function
 gen_income_chart(db)
 
-print(gen_table2(db))
-print(gen_state_table(db))
+def gen_gender_gap_table(db: pd.DataFrame) -> pd.DataFrame:
+    # define races
+    races = ['White', 'Black', 'Asian', 'Hispanic', 'Other']
+    
+    t_table_rows = []
+    
+    for race_name in races:
+        # filter race data
+        race_data = db[db['raceethnic'] == race_name]
+        
+        # filter male/female inc
+        men_inc = race_data[race_data['male'] == 'Male']['income']
+        women_inc = race_data[race_data['male'] == 'Female']['income']
+        
+        # fix the small sample error
+        if len(men_inc) > 1 and len(women_inc) > 1:
+            mean_m = men_inc.mean()
+            mean_w = women_inc.mean()
+            diff = mean_m - mean_w
+            
+            # t-test
+            p_val = ttest_ind(men_inc, women_inc, nan_policy='omit', equal_var=False).pvalue
+            
+            #add stars
+            stars = ""
+            if p_val <= 0.01: stars = "***"
+            elif p_val <= 0.05: stars = "**"
+            elif p_val <= 0.10: stars = "*"
+            
+            t_table_rows.append([
+                race_name,
+                f"${mean_m:,.2f}",
+                f"${mean_w:,.2f}",
+                f"${diff:,.2f}{stars}"
+            ])
+        else:
+            #incase theres no data
+            t_table_rows.append([race_name, "No Data", "No Data", "No Data"])
+
+    columns = ['Race', 'Men Avg. Income', 'Women Avg. Income', 'Difference (Men-Women)']
+    return pd.DataFrame(t_table_rows, columns=columns)
+
+# Generate and Print
+gender_gap_table = gen_gender_gap_table(db)
+gender_gap_table.to_excel("Gender.xlsx")
