@@ -41,7 +41,9 @@ def gen_model1(db: pd.DataFrame):
     return model
 
 #generate model 1
+print("Running model 1...")
 model1 = gen_model1(db)
+print("Model 1 done.")
 
 #generate and return model 2 (add state, occupation, and industry controls)
 def gen_model2(db: pd.DataFrame):
@@ -54,7 +56,9 @@ def gen_model2(db: pd.DataFrame):
     return model
 
 #generate model 2
+print("Running model 2...")
 model2 = gen_model2(db)
+print("Model 2 done.")
 
 #generate and return model 3 (drop variables insignificant at 5% from model 2)
 def gen_model3(db: pd.DataFrame, model2):
@@ -73,7 +77,9 @@ def gen_model3(db: pd.DataFrame, model2):
     return model, sig_cont, sig_cat
 
 #generate model 3
+print("Running model 3...")
 model3, sig_cont_m3, sig_cat_m3 = gen_model3(db, model2)
+print("Model 3 done.")
 
 #generate and return model 4 (add three interaction sets to model 3)
 def gen_model4(db: pd.DataFrame, model3, sig_cont, sig_cat):
@@ -105,7 +111,9 @@ def gen_model4(db: pd.DataFrame, model3, sig_cont, sig_cat):
     return model, terms, fstat_q1, pval_q1, fstat_q2, pval_q2, fstat_q3, pval_q3
 
 #generate model 4
+print("Running model 4...")
 model4, m4_terms, fstat_q1, pval_q1, fstat_q2, pval_q2, fstat_q3, pval_q3 = gen_model4(db, model3, sig_cont_m3, sig_cat_m3)
+print("Model 4 done.")
 
 #print f-test results for model 4 interactions
 print("\n=== Model 4: Interaction F-Test Results ===")
@@ -157,7 +165,9 @@ def gen_model5(db: pd.DataFrame, model4, m4_terms, pval_q1, pval_q2, pval_q3):
     return model, terms
 
 #generate model 5
+print("Running model 5...")
 model5, m5_terms = gen_model5(db, model4, m4_terms, pval_q1, pval_q2, pval_q3)
+print("Model 5 done.")
 
 #generate and return cleaned ipums data for pennsylvania 2023
 def gen_ipums_data(path: str) -> pd.DataFrame:
@@ -269,7 +279,9 @@ def gen_model6(pa_clean: pd.DataFrame):
     return model
 
 #generate model 6
+print("Running model 6...")
 model6 = gen_model6(pa_clean)
+print("Model 6 done.")
 
 #generate and return combined regression results table (all 6 models)
 def gen_results_table(model1, model2, model3, model4, model5, model6,
