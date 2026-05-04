@@ -385,7 +385,77 @@ def gen_results_table(model1, model2, model3, model4, model5, model6,
     cols = ['Variable', 'Model 1', 'Model 2', 'Model 3', 'Model 4', 'Model 5', 'Model 6']
     return pd.DataFrame(rows, columns=cols)
 
+#format and save the results table to excel with professional styling
+def format_results_excel(filepath: str):
+    from openpyxl import load_workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    wb = load_workbook(filepath)
+    ws = wb.active
+
+    #border styles
+    thick = Side(style='medium')
+    thin  = Side(style='thin')
+
+    #column widths
+    ws.column_dimensions['A'].width = 30
+    for i in range(2, 8):
+        ws.column_dimensions[get_column_letter(i)].width = 16
+
+    total_rows = ws.max_row
+
+    for row_idx in range(1, total_rows + 1):
+        label = str(ws.cell(row_idx, 1).value or '')
+
+        #identify row type
+        is_header   = row_idx == 1
+        is_se_row   = (label == '' and
+                       any(str(ws.cell(row_idx, c).value or '').startswith('(')
+                           for c in range(2, 8)))
+        is_blank    = (label == '' and
+                       all(str(ws.cell(row_idx, c).value or '') == ''
+                           for c in range(2, 8)))
+        is_footer   = any(k in label for k in ['Controls', 'Adj.', 'N'])
+        is_controls = label == 'Controls for State?'
+        is_last     = row_idx == total_rows
+
+        for col_idx in range(1, 8):
+            cell = ws.cell(row_idx, col_idx)
+
+            #alignment
+            cell.alignment = Alignment(
+                horizontal='left' if col_idx == 1 else 'center',
+                vertical='center'
+            )
+
+            #font
+            if is_header:
+                cell.font = Font(bold=True, size=11)
+                cell.fill = PatternFill('solid', fgColor='F2F2F2')
+            elif is_footer:
+                cell.font = Font(bold=True, size=10)
+            elif is_se_row:
+                cell.font = Font(size=10, color='595959')
+            else:
+                cell.font = Font(size=10)
+
+            #borders
+            top_border    = thick if is_header or is_controls else None
+            bottom_border = thick if is_header or is_last     else None
+            cell.border   = Border(
+                top    = top_border    or Side(style=None),
+                bottom = bottom_border or Side(style=None)
+            )
+
+    #freeze the header row
+    ws.freeze_panes = 'A2'
+
+    wb.save(filepath)
+
 #generate results table and export to excel
 results_table = gen_results_table(model1, model2, model3, model4, model5, model6,
                                   sig_cat_m3, m5_terms)
 results_table.to_excel("Results.xlsx", index=False)
+format_results_excel("Results.xlsx")
+print("Results table saved to Results.xlsx")
