@@ -172,14 +172,11 @@ def gen_ipums_data(path: str) -> pd.DataFrame:
     pa['male'] = (pa['SEX'] == 1).astype(int)
 
     #recode race and hispanic origin to 5-category raceethnic
-    def map_race(race, hispan):
-        if hispan > 0:         return 4  # hispanic
-        if race == 1:          return 1  # white
-        if race == 2:          return 2  # black
-        if race in [4, 5, 6]:  return 3  # asian / pacific islander
-        return 5                         # other
-
-    pa['raceethnic'] = pa.apply(lambda r: map_race(r['RACE'], r['HISPAN']), axis=1)
+    pa['raceethnic'] = 5                                                          # default: other
+    pa.loc[(pa['HISPAN'] == 0) & (pa['RACE'] == 1),          'raceethnic'] = 1  # white
+    pa.loc[(pa['HISPAN'] == 0) & (pa['RACE'] == 2),          'raceethnic'] = 2  # black
+    pa.loc[(pa['HISPAN'] == 0) & (pa['RACE'].isin([4,5,6])), 'raceethnic'] = 3  # asian
+    pa.loc[ pa['HISPAN'] > 0,                                'raceethnic'] = 4  # hispanic
 
     #recode ipums educ (0-11) to 5-category ed
     def map_ed(educ):
