@@ -252,13 +252,8 @@ def gen_ipums_data(path: str) -> pd.DataFrame:
 
     return pa_clean
 
-#find and load ipums file (checks current directory and parent directories)
-ipums_path = os.path.join(os.getcwd(), "usa_00002.csv")
-for levels in range(1, 6):
-    if not os.path.exists(ipums_path):
-        ipums_path = os.path.normpath(os.path.join(os.getcwd(), *(['..'] * levels), "usa_00002.csv"))
-
 #generate cleaned ipums data for pennsylvania 2023
+ipums_path = os.path.join(os.getcwd(), "usa_00002.csv")
 pa_clean = gen_ipums_data(ipums_path)
 print(f"\nIPUMS PA 2023 sample: {len(pa_clean):,} observations")
 print(f"Average income (INCWAGE): ${pa_clean['income'].mean():,.2f}")
