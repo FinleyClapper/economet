@@ -166,7 +166,11 @@ def gen_ipums_data(path: str) -> pd.DataFrame:
     raw = pd.read_csv(path)
 
     #filter to pennsylvania 2023
+    print(f"Years in IPUMS file: {sorted(raw['YEAR'].unique())}")
+    print(f"States in IPUMS file (sample): {sorted(raw['STATEFIP'].unique())[:10]}")
     pa = raw[(raw['STATEFIP'] == 42) & (raw['YEAR'] == 2023)].copy()
+    if len(pa) == 0:
+        raise ValueError("No Pennsylvania 2023 observations found. Re-download the IPUMS extract with YEAR=2023 and STATEFIP=42 (ACS, not ACS 5-year).")
 
     #recode sex to male indicator
     pa['male'] = (pa['SEX'] == 1).astype(int)
